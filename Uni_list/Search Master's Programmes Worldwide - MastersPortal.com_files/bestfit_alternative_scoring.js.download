@@ -1,0 +1,301 @@
+(function () {
+
+	if (!window.ExperimentScript || typeof window.addExperiment !== 'function') {
+
+		return;
+	}
+
+	const experimentName = 'MIAUW2110-BestFitAlternativeScoring';
+
+	const amountOfVariations = 3;
+	const variationsConfig = [
+		{
+			number: 0,
+			name: 'control',
+			traffic: 100 / amountOfVariations
+		}, {
+			number: 1,
+			name: 'three_labels',
+			traffic: 100 / amountOfVariations
+		}, {
+			number: 2,
+			name: 'five_labels',
+			traffic: 100 / amountOfVariations
+		}
+	];
+
+	if (amountOfVariations !== variationsConfig.length) {
+		console.warn('MIAUW2110-BestFitAlternativeScoring: invalid traffic distribution');
+		return;
+	}
+
+	const methods = [
+		{
+			name: 'performActionsForControl',
+			code: function () {
+
+			}
+		},
+		{
+			name: 'performActionsForVariations',
+			code: function () {
+
+				document.head.appendChild(this.style);
+
+				document.addEventListener('bestfit_overview_opened', () => {
+
+					setTimeout(() => {
+						this.triggerOverviewActions(this.variation.number);
+					}, 300);
+				});
+
+				document.addEventListener('bestfit_fit_saved', () => {
+
+					setTimeout(() => {
+						this.triggerWidgetActions(this.variation.number);
+						this.triggerOverviewActions(this.variation.number);
+					}, 100);
+				});
+			}
+		},
+		{
+			name: 'triggerWidgetActions',
+			code: function (variation) {
+
+				const widgets = Array.from(document.querySelectorAll('.ButtonIconWidget'));
+				const studyPageMainWidget = document.querySelector('.ButtonEssentialInfoWidget');
+				const studyPageFixedWidget = document.querySelector('.ButtonHeaderWidget');
+
+				if(widgets.length === 0) { return; }
+				if(studyPageMainWidget) { widgets.push(studyPageMainWidget); }
+				if(studyPageFixedWidget) { widgets.push(studyPageFixedWidget); }
+				
+				widgets.forEach(widget => {
+
+					this.resetWidgetClasses(widget);
+
+					setTimeout(() => {
+						this.applyScoringForWidget(widget, variation);
+					}, 100);
+				});
+			}
+		},
+		{
+			name: 'triggerOverviewActions',
+			code: function (variation) {
+
+				const verdict = document.getElementById('overallVerdict');
+
+				if(!verdict) { return; }
+
+				const score = verdict.querySelector('.Score').innerText;
+
+				this.applyScoringForOverview(verdict, score, variation);
+			}
+		},
+		{
+			name: 'applyScoringForWidget',
+			code: function (widget, variation) {
+
+				switch(variation) {
+					case 0:
+						break;
+					case 1:
+						this.applyVarationOneWidget(widget);
+						break;
+					case 2:
+						this.applyVarationTwoWidget(widget);
+						break;
+				}
+			}
+		},
+		{
+			name: 'applyScoringForOverview',
+			code: function (verdict, score, variation) {
+
+				switch(variation) {
+					case 0:
+						break;
+					case 1:
+						this.applyVarationOneOverview(verdict, score);
+						break;
+					case 2:
+						this.applyVarationTwoOverview(verdict, score);
+						break;
+				}
+			}
+		},
+		{
+			name: 'resetWidgetClasses',
+			code: function (widget) {
+
+				widget.classList.remove('PoorFit');
+				widget.classList.remove('FairFit');
+				widget.classList.remove('GoodFit');
+				widget.classList.remove('VeryGoodFit');
+				widget.classList.remove('ExcellentFit');
+			}
+		},
+		{
+			name: 'applyVarationOneWidget',
+			code: function (widget) {
+
+				const fitTextContainer = widget.querySelector('.FitText');
+
+				if(!fitTextContainer) { return; }
+
+				switch(widget.dataset.fit) {
+					case 'below 50%':
+					case '50% fit':
+						widget.classList.add('PoorFit');
+						fitTextContainer.innerText = 'Poor match';
+						break;
+					case '60% fit':
+					case '70% fit':
+						widget.classList.add('GoodFit');
+						fitTextContainer.innerText = 'Good match';
+						break;
+					case '80% fit':
+					case '90% fit':
+						widget.classList.add('ExcellentFit');
+						fitTextContainer.innerText = 'Excellent match';
+						break;
+				}
+			}
+		},
+		{
+			name: 'applyVarationTwoWidget',
+			code: function (widget) {
+
+				const fitTextContainer = widget.querySelector('.FitText');
+
+				if(!fitTextContainer) { return; }
+
+				switch(widget.dataset.fit) {
+					case 'below 50%':
+					case '50% fit':
+						widget.classList.add('PoorFit');
+						fitTextContainer.innerText = 'Poor match';
+						break;
+					case '60% fit':
+						widget.classList.add('FairFit');
+						fitTextContainer.innerText = 'Fair match';
+						break;
+					case '70% fit':
+						widget.classList.add('GoodFit');
+						fitTextContainer.innerText = 'Good match';
+						break;
+					case '80% fit':
+						widget.classList.add('VeryGoodFit');
+						fitTextContainer.innerText = 'Very good match';
+						break;
+					case '90% fit':
+						widget.classList.add('ExcellentFit');
+						fitTextContainer.innerText = 'Excellent match';
+						break;
+				}
+			}
+		},
+		{
+			name: 'applyVarationOneOverview',
+			code: function (verdict, score) {
+
+				const verdictTextContainer = verdict.querySelector('h3');
+
+				if(!verdictTextContainer) { return; }
+
+				switch(score) {
+					case 'below 50%':
+					case '50%':
+						verdictTextContainer.innerText = 'Poor match';
+						break;
+					case '60%':
+					case '70%':
+						verdictTextContainer.innerText = 'Good match';
+						break;
+					case '80%':
+					case '90%':
+						verdictTextContainer.innerText = 'Excellent match';
+						break;
+				}
+			}
+		},
+		{
+			name: 'applyVarationTwoOverview',
+			code: function (verdict, score) {
+
+				const verdictTextContainer = verdict.querySelector('h3');
+
+				if(!verdictTextContainer) { return; }
+
+				switch(score) {
+					case 'below 50%':
+					case '50%':
+						verdictTextContainer.innerText = 'Poor match';
+						break;
+					case '60%':
+						verdictTextContainer.innerText = 'Fair match';
+						break;
+					case '70%':
+						verdictTextContainer.innerText = 'Good match';
+						break;
+					case '80%':
+						verdictTextContainer.innerText = 'Very good match';
+						break;
+					case '90%':
+						verdictTextContainer.innerText = 'Excellent match';
+						break;
+				}
+			}
+		}
+	];
+
+	window.addExperiment(
+		experimentName,
+		variationsConfig,
+		`
+			.ButtonIconWidget.PoorFit .BestFitLogo,
+			.ButtonIconWidget.FairFit .BestFitLogo,
+			.ButtonIconWidget.GoodFit .BestFitLogo,
+			.ButtonIconWidget.VeryGoodFit .BestFitLogo,
+			.ButtonIconWidget.ExcellentFit .BestFitLogo {
+				display: none;
+			}
+			.ButtonIconWidget.PoorFit {
+				background: rgba(36, 123, 160, 0.1) !important;
+			}
+			.ButtonIconWidget.PoorFit .FitText {
+				color: #05293C;
+			}
+			.ButtonIconWidget.FairFit {
+				background: rgba(36, 123, 160, 0.2) !important;
+			}
+			.ButtonIconWidget.FairFit .FitText {
+				color: #05293C;
+			}
+			.ButtonIconWidget.GoodFit {
+				background: rgba(36, 123, 160, 0.3) !important;
+			}
+			.ButtonIconWidget.GoodFit .FitText {
+				color: #05293C;
+			}
+			.ButtonIconWidget.VeryGoodFit {
+				background: rgba(36, 123, 160, 0.4) !important;
+			}
+			.ButtonIconWidget.VeryGoodFit .FitText {
+				color: #05293C;
+			}
+			.ButtonIconWidget.ExcellentFit {
+				background: rgba(36, 123, 160, 0.5) !important;
+			}
+			.ButtonIconWidget.ExcellentFit .FitText {
+				color: #05293C;
+			}
+			.ButtonEssentialInfoWidget .FitText {
+				line-height: 1rem !important;
+			}
+		`,
+		methods
+	);
+
+})();

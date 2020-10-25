@@ -1,0 +1,200 @@
+(function () {
+
+    if (!window.ExperimentScript || typeof window.addExperiment !== 'function') {
+
+        return;
+    }
+
+    const experimentName = 'MIAUW-1074-AuthenticationProviderOrder';
+
+    const amountOfVariations = 6;
+    const variationsConfig = [
+        {
+            number: 0,
+            name: 'control',
+            traffic: 100 / amountOfVariations
+        }, {
+            number: 1,
+            name: 'google_linkedin_facebook',
+            traffic: 100 / amountOfVariations
+        },
+        {
+            number: 2,
+            name: 'facebook_google_linkedin',
+            traffic: 100 / amountOfVariations
+        },
+        {
+            number: 3,
+            name: 'facebook_linkedin_google',
+            traffic: 100 / amountOfVariations
+        },
+        {
+            number: 4,
+            name: 'linkedin_google_facebook',
+            traffic: 100 / amountOfVariations
+        },
+        {
+            number: 5,
+            name: 'linkedin_facebook_google',
+            traffic: 100 / amountOfVariations
+        }
+    ];
+
+    if (amountOfVariations !== variationsConfig.length) {
+        console.warn('invalid traffic distribution');
+        return;
+    }
+
+    const stylingAsString =
+        `
+        #authMain .SocialLoginWrapper.Big {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ProviderOrderOne #authMain .GoogleLogin {
+            order: 1;
+        }
+        
+        .ProviderOrderOne #authMain .FacebookLogin {
+            order: 3;
+        }
+
+        .ProviderOrderOne #authMain .LinkedinLogin {
+            order: 2;
+        }
+
+        .ProviderOrderTwo #authMain .GoogleLogin {
+            order: 2;
+        }
+        
+        .ProviderOrderTwo #authMain .FacebookLogin {
+            order: 1;
+        }
+
+        .ProviderOrderTwo #authMain .LinkedinLogin {
+            order: 3;
+        }
+
+        .ProviderOrderThree #authMain .GoogleLogin {
+            order: 3;
+        }
+        
+        .ProviderOrderThree #authMain .FacebookLogin {
+            order: 1;
+        }
+
+        .ProviderOrderThree #authMain .LinkedinLogin {
+            order: 2;
+        }
+        
+        .ProviderOrderFour #authMain .GoogleLogin {
+            order: 2;
+        }
+        
+        .ProviderOrderFour #authMain .FacebookLogin {
+            order: 3;
+        }
+
+        .ProviderOrderFour #authMain .LinkedinLogin {
+            order: 1;
+        }
+
+        .ProviderOrderFive #authMain .GoogleLogin {
+            order: 3;
+        }
+        
+        .ProviderOrderFive #authMain .FacebookLogin {
+            order: 2;
+        }
+
+        .ProviderOrderFive #authMain .LinkedinLogin {
+            order: 1;
+        }
+        `;
+
+    const methods = [
+        {
+            name: 'performActionsForControl',
+            code: function () {
+                document.addEventListener('student_registered', () => {
+
+                    this.fireTracking('student_registered');
+                })
+
+                document.addEventListener('logging_in_existing_user', () => {
+
+                    this.fireTracking('existing_student_logged_in');
+                })
+            }
+        },
+        {
+            name: 'performActionsForVariations',
+            code: function () {
+
+                document.head.appendChild(this.style);
+
+                switch (this.variation.number) {
+                    case 1:
+                        document.body.classList.add('ProviderOrderOne');
+                        break;
+                    case 2:
+                        document.body.classList.add('ProviderOrderTwo');
+                        break;
+                    case 3:
+                        document.body.classList.add('ProviderOrderThree');
+                        break;
+                    case 4:
+                        document.body.classList.add('ProviderOrderFour');
+                        break;
+                    case 5:
+                        document.body.classList.add('ProviderOrderFive');
+                        break;
+                    default:
+                        console.warn('incorrect variation number');
+                }
+
+                document.addEventListener('student_registered', () => {
+
+                    this.fireTracking('student_registered');
+                })
+
+                document.addEventListener('logging_in_existing_user', () => {
+
+                    this.fireTracking('existing_student_logged_in');
+                })
+
+                document.addEventListener('RenderAuthenticationService', () => {
+
+                    if(event.detail.referrer === "ExclusiveAccessV2"
+                        || event.detail.referrer === "ProfileQuestionnaires") {
+
+                        return;
+                    }
+
+                    this.fireTracking('authentication_popup_seen');
+                });
+            }
+        },
+        {
+            name: 'areConditionsMet',
+            code: () => {
+
+                let isLoggedIn = sessionStorage.getItem('LoggedInStatus');
+                if (isLoggedIn === 'true') {
+                    return false
+                };
+
+                return true;
+            }
+        }
+    ];
+
+    window.addExperiment(
+        experimentName,
+        variationsConfig,
+        stylingAsString,
+        methods
+    );
+
+})();
